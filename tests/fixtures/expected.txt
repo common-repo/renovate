@@ -1,0 +1,4 @@
+common-repo/upstream v2.2.1
+common-repo/semantic-release v0.9.1
+textla/cr-golang v0.5.1
+common-repo/conventional-commits v1.4.1

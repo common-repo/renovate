@@ -1,0 +1,23 @@
+# Layouts the custom managers must find. Each match is listed in
+# tests/fixtures/expected.txt as "depName currentValue".
+- repo:
+    url: https://github.com/common-repo/upstream
+    ref: v2.2.1
+- repo:
+    url: https://github.com/common-repo/semantic-release.git
+    ref: "v0.9.1"
+- repo:
+    url: "https://github.com/textla/cr-golang"  # private
+    # Pinned until common-repo/common-repo#370 is fixed.
+    ref: 'v0.5.1'
+    with:
+      - exclude:
+          - ".github/workflows/ci.yaml"
+- repo:
+    ref: v1.4.1
+    url: https://github.com/common-repo/conventional-commits
+- repo:
+    url: ../local-sibling
+- repo:
+    url: git@github.com:example/ssh-upstream.git
+    ref: v1.0.0

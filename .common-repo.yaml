@@ -1,0 +1,43 @@
+# Local consumption: apply our own source files to this repo, so this repo's
+# Renovate bumps its own upstream refs.
+- self:
+  - repo:
+      url: https://github.com/common-repo/upstream
+      ref: v2.2.1
+      with:
+        - template-vars:
+            GH_APP_ID_SECRET: COMMON_REPO_BOT_CLIENT_ID
+            GH_APP_KEY_SECRET: COMMON_REPO_BOT_PRIVATE_KEY
+            GH_APP_OWNER: common-repo
+  - include:
+      - "src/**"
+  - template:
+      - "src/.github/workflows/renovate.yaml"
+  - rename:
+      - "^src/(.*)$": "$1"
+  - template-vars:
+      GH_APP_ID_SECRET: COMMON_REPO_BOT_CLIENT_ID
+      GH_APP_KEY_SECRET: COMMON_REPO_BOT_PRIVATE_KEY
+      GH_APP_OWNER: common-repo
+      RENOVATE_EXTRA_REPOSITORIES: ""
+      RENOVATE_CRON: "17 6 * * *"
+      RENOVATE_LOG_LEVEL: info
+      COMMON_REPO_VERSION: v0.37.7
+
+# Source API: what consumers inherit. Source and self pipelines have separate
+# variable scopes. These defaults allow local apply; consumer
+# `with: template-vars` override them.
+- template-vars:
+    GH_APP_ID_SECRET: COMMON_REPO_BOT_CLIENT_ID
+    GH_APP_KEY_SECRET: COMMON_REPO_BOT_PRIVATE_KEY
+    GH_APP_OWNER: common-repo
+    RENOVATE_EXTRA_REPOSITORIES: ""
+    RENOVATE_CRON: "17 6 * * *"
+    RENOVATE_LOG_LEVEL: info
+    COMMON_REPO_VERSION: v0.37.7
+- include:
+    - "src/**"
+- template:
+    - "src/.github/workflows/renovate.yaml"
+- rename:
+    - "^src/(.*)$": "$1"

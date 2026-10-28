@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+cd "$REPO_ROOT"
+
+failures=0
+tests=0
+
+pass() { tests=$((tests + 1)); echo "  PASS: $1"; }
+fail() { tests=$((tests + 1)); failures=$((failures + 1)); echo "  FAIL: $1"; }
+# REQUIRE_TOOLS=1 (set by the Consumer fixture workflow) turns skips into failures.
+skip() {
+  if [ "${REQUIRE_TOOLS:-}" = 1 ]; then fail "$1"; else echo "  SKIP: $1"; fi
+}
+
+workflow=src/.github/workflows/renovate.yaml
+global=src/.github/renovate-global.json
+
+echo "==> Checking template vars"
+
+# Every source default must be used by the workflow, and vice versa.
+config_vars=$(sed -n '/^- template-vars:/,/^- /p' .common-repo.yaml | grep -E '^    [A-Z_]+:' | awk -F: '{print $1}' | tr -d ' ' | sort -u)
+workflow_vars=$(grep -o '__COMMON_REPO__[A-Z_]*__' "$workflow" | sed 's/^__COMMON_REPO__//; s/__$//' | sort -u)
+if [ "$config_vars" = "$workflow_vars" ]; then
+  pass "source template-vars match the workflow's sentinels"
+else
+  fail "source template-vars and workflow sentinels differ"
+  diff <(echo "$config_vars") <(echo "$workflow_vars") || true
+fi
+
+echo "==> Checking the global config"
+
+if python3 -c "import json, sys; json.load(open(sys.argv[1]))" "$global"; then
+  pass "$global is valid JSON"
+else
+  fail "$global is not valid JSON"
+fi
+
+if command -v renovate-config-validator >/dev/null 2>&1; then
+  if RENOVATE_CONFIG_FILE="$global" renovate-config-validator >/dev/null 2>&1; then
+    pass "renovate-config-validator accepts $global"
+  else
+    fail "renovate-config-validator rejects $global"
+  fi
+else
+  skip "renovate-config-validator not installed"
+fi
+
+if python3 tests/match_refs.py "$global" tests/fixtures/common-repo.yaml | diff - tests/fixtures/expected.txt; then
+  pass "custom managers find exactly the expected refs"
+else
+  fail "custom managers' matches differ from tests/fixtures/expected.txt"
+fi
+
+echo "==> Applying to a consumer fixture"
+
+if ! command -v common-repo >/dev/null 2>&1; then
+  skip "common-repo not installed"
+  echo ""
+  echo "==> $tests tests, $failures failures"
+  [ "$failures" -eq 0 ]
+  exit
+fi
+
+consumer="$(mktemp -d)"
+trap 'rm -rf "$consumer"' EXIT
+cat >"$consumer/.common-repo.yaml" <<YAML
+- repo:
+    url: $REPO_ROOT
+    with:
+      - template-vars:
+          GH_APP_ID_SECRET: FIXTURE_APP_ID
+          GH_APP_KEY_SECRET: FIXTURE_APP_KEY
+          GH_APP_OWNER: fixture-org
+          RENOVATE_EXTRA_REPOSITORIES: private-a,private-b
+YAML
+
+if (cd "$consumer" && common-repo apply >/dev/null 2>&1); then
+  pass "apply succeeds"
+else
+  fail "apply failed"
+fi
+
+for f in .github/workflows/renovate.yaml .github/renovate-global.json; do
+  if [ -f "$consumer/$f" ]; then pass "$f delivered"; else fail "$f missing"; fi
+done
+
+rendered="$consumer/.github/workflows/renovate.yaml"
+if [ -f "$rendered" ]; then
+  if grep -q '__COMMON_REPO__' "$rendered"; then
+    fail "unrendered sentinels remain"
+  else
+    pass "no unrendered sentinels"
+  fi
+  for want in 'secrets.FIXTURE_APP_ID' 'secrets.FIXTURE_APP_KEY' 'owner: fixture-org' \
+    'steps.repo.outputs.name }},private-a,private-b' 'cron: "17 6 \* \* \*"' 'version: v0.37.7'; do
+    if grep -q "$want" "$rendered"; then pass "rendered: $want"; else fail "not rendered: $want"; fi
+  done
+  if grep -q 'COMMON_REPO_BOT\|owner: common-repo' "$rendered"; then
+    fail "source defaults leaked into the consumer"
+  else
+    pass "consumer values override source defaults"
+  fi
+fi
+
+if (cd "$consumer" && common-repo diff >/dev/null 2>&1); then
+  pass "second apply is a no-op (common-repo diff clean)"
+else
+  fail "common-repo diff reports changes after apply"
+  (cd "$consumer" && common-repo diff) || true
+fi
+
+echo ""
+echo "==> $tests tests, $failures failures"
+[ "$failures" -eq 0 ]

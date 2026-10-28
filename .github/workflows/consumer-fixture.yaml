@@ -1,0 +1,40 @@
+# Runs script/test with every tool it needs, so nothing is skipped. The
+# managed CI Test job runs script/test without common-repo or Renovate.
+name: Consumer fixture
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  fixture:
+    name: Consumer fixture
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+        with:
+          persist-credentials: false
+
+      # Same CLI version the workflow defaults to.
+      - uses: common-repo/setup-common-repo@887d2b31e6678fb650d1b1b6fb6097afa5528310 # v1.0.1
+        with:
+          version: v0.37.7
+
+      # Same major as the Renovate image the workflow runs. Exact version, test
+      # job only, no secrets in scope.
+      - name: Install renovate-config-validator
+        run: npm install --global --no-audit --no-fund renovate@44.192.2 # zizmor: ignore[adhoc-packages]
+
+      - name: Run tests
+        env:
+          REQUIRE_TOOLS: "1"
+        run: script/test
