@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.1.1 - 2026-10-28
+#### Bug Fixes
+- give private upstreams a read-only token - (1d2cbe6) - Jathan McCollum
+
+- - -
+
 ## v0.1.0 - 2026-10-28
 #### Features
 - add self-hosted Renovate for common-repo upstream refs - (cfbda71) - Jathan McCollum
