@@ -12,7 +12,8 @@
       "matchStrings": [
         "url:[ \\t]*[\"']?https://github\\.com/(?<depName>[^/\\s\"'#]+/[^/\\s\"'#]+?)(?:\\.git)?[\"']?[ \\t]*(?:#[^\\n]*)?\\n(?:[ \\t]*(?:#[^\\n]*)?\\n)*[ \\t]*ref:[ \\t]*[\"']?(?<currentValue>[^\\s\"'#]+)"
       ],
-      "datasourceTemplate": "github-tags",
+      "datasourceTemplate": "git-tags",
+      "packageNameTemplate": "https://github.com/{{{depName}}}",
       "depTypeTemplate": "common-repo"
     },
     {
@@ -22,7 +23,8 @@
       "matchStrings": [
         "ref:[ \\t]*[\"']?(?<currentValue>[^\\s\"'#]+)[\"']?[ \\t]*(?:#[^\\n]*)?\\n(?:[ \\t]*(?:#[^\\n]*)?\\n)*[ \\t]*url:[ \\t]*[\"']?https://github\\.com/(?<depName>[^/\\s\"'#]+/[^/\\s\"'#]+?)(?:\\.git)?[\"']?[ \\t]*(?:#[^\\n]*)?(?:\\n|$)"
       ],
-      "datasourceTemplate": "github-tags",
+      "datasourceTemplate": "git-tags",
+      "packageNameTemplate": "https://github.com/{{{depName}}}",
       "depTypeTemplate": "common-repo"
     }
   ],

@@ -94,9 +94,15 @@ if [ -f "$rendered" ]; then
     pass "no unrendered sentinels"
   fi
   for want in 'secrets.FIXTURE_APP_ID' 'secrets.FIXTURE_APP_KEY' 'owner: fixture-org' \
-    'steps.repo.outputs.name }},private-a,private-b' 'cron: "17 6 \* \* \*"' 'version: v0.37.7'; do
+    'repositories: ${{ steps.repo.outputs.name }}$' 'EXTRA_REPOSITORIES: "private-a,private-b"' 'cron: "17 6 \* \* \*"' 'version: v0.37.7'; do
     if grep -q "$want" "$rendered"; then pass "rendered: $want"; else fail "not rendered: $want"; fi
   done
+  # The write token must not reach the private upstreams.
+  if grep -q 'repositories: .*private-a' "$rendered"; then
+    fail "write token covers the private upstreams"
+  else
+    pass "write token covers only the current repo"
+  fi
   if grep -q 'COMMON_REPO_BOT\|owner: common-repo' "$rendered"; then
     fail "source defaults leaked into the consumer"
   else

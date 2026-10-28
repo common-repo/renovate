@@ -24,6 +24,9 @@ jobs:
   renovate:
     name: Renovate
     runs-on: ubuntu-latest
+    env:
+      # Comma-separated private upstreams under the App owner.
+      EXTRA_REPOSITORIES: "__COMMON_REPO__RENOVATE_EXTRA_REPOSITORIES__"
     steps:
       # Only the global config is needed; Renovate clones the repo itself.
       - name: Check out global config
@@ -39,10 +42,9 @@ jobs:
         id: repo
         run: echo "name=${GITHUB_REPOSITORY#*/}" >> "$GITHUB_OUTPUT"
 
-      # Extra repositories are private upstreams in the same installation:
-      # Renovate reads their tags, and `common-repo apply` clones them.
-      # Renovate passes its token to post-upgrade commands as a git insteadOf
-      # for github.com.
+      # Renovate hands its token to post-upgrade commands as a git insteadOf
+      # for github.com, so this token reaches `common-repo apply` and must
+      # only be able to write to the repo being updated.
       - name: Generate app token
         id: app-token
         uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
@@ -50,8 +52,7 @@ jobs:
           client-id: ${{ secrets.__COMMON_REPO__GH_APP_ID_SECRET__ }}
           private-key: ${{ secrets.__COMMON_REPO__GH_APP_KEY_SECRET__ }}
           owner: __COMMON_REPO__GH_APP_OWNER__
-          # Comma-separated; empty entries are ignored.
-          repositories: ${{ steps.repo.outputs.name }},__COMMON_REPO__RENOVATE_EXTRA_REPOSITORIES__
+          repositories: ${{ steps.repo.outputs.name }}
           permission-contents: write
           permission-pull-requests: write
           # Dependency Dashboard issue, if the repo config enables it.
@@ -60,6 +61,33 @@ jobs:
           permission-workflows: write
           permission-checks: read
           permission-statuses: read
+
+      # Private upstreams get a separate read-only token: Renovate reads their
+      # tags and `common-repo apply` clones them, but nothing pushes to them.
+      - name: Generate read-only token for private upstreams
+        id: read-token
+        if: env.EXTRA_REPOSITORIES != ''
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          client-id: ${{ secrets.__COMMON_REPO__GH_APP_ID_SECRET__ }}
+          private-key: ${{ secrets.__COMMON_REPO__GH_APP_KEY_SECRET__ }}
+          owner: __COMMON_REPO__GH_APP_OWNER__
+          repositories: ${{ env.EXTRA_REPOSITORIES }}
+          permission-contents: read
+
+      # One host rule per private upstream. Renovate turns each into a git
+      # insteadOf for that repo URL, which git prefers over the shorter
+      # github.com rule, for tag lookups and post-upgrade clones alike.
+      - name: Route private upstreams to the read-only token
+        if: env.EXTRA_REPOSITORIES != ''
+        env:
+          OWNER: __COMMON_REPO__GH_APP_OWNER__
+          READ_TOKEN: ${{ steps.read-token.outputs.token }}
+        run: |
+          rules="$(jq -nc --arg owner "${OWNER}" --arg repos "${EXTRA_REPOSITORIES}" --arg token "${READ_TOKEN}" \
+            '[$repos | split(",")[] | gsub("\\s"; "") | select(length > 0)
+              | {hostType: "github", matchHost: "https://github.com/\($owner)/\(.)", token: $token}]')"
+          echo "RENOVATE_HOST_RULES=${rules}" >> "$GITHUB_ENV"
 
       # Pinned: `common-repo apply` output differs between CLI versions, and
       # Renovate commits whatever apply produces.

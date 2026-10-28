@@ -38,7 +38,8 @@ file, including this one, has a newer tag.
   repo inherits from, directly or transitively. It needs contents, pull
   requests, issues and workflows write, and checks and statuses read.
   Workflows write is required because `common-repo apply` rewrites files
-  under `.github/workflows/`.
+  under `.github/workflows/`. Private upstreams only ever get a read-only
+  token.
 - Normal review on Renovate PRs. A bump runs whatever the new upstream tag
   delivers, including workflow changes, so only inherit from upstreams you
   trust and don't let these PRs merge without review.
@@ -50,7 +51,7 @@ file, including this one, has a newer tag.
 | `GH_APP_ID_SECRET` | `COMMON_REPO_BOT_CLIENT_ID` | Name of the `secrets.*` entry holding the App ID or Client ID |
 | `GH_APP_KEY_SECRET` | `COMMON_REPO_BOT_PRIVATE_KEY` | Name of the `secrets.*` entry holding the App private key |
 | `GH_APP_OWNER` | `common-repo` | Owner the App is installed on |
-| `RENOVATE_EXTRA_REPOSITORIES` | empty | Comma-separated private upstreams under `GH_APP_OWNER`. The token always covers the current repo |
+| `RENOVATE_EXTRA_REPOSITORIES` | empty | Comma-separated private upstreams under `GH_APP_OWNER`. They get a separate read-only token |
 | `RENOVATE_CRON` | `17 6 * * *` | Schedule for the daily run |
 | `RENOVATE_LOG_LEVEL` | `info` | Renovate `LOG_LEVEL` |
 | `COMMON_REPO_VERSION` | `v0.37.7` | common-repo CLI used by the post-upgrade `apply` |
@@ -64,11 +65,16 @@ can't reach another owner's private repos.
 
 ## How it works
 
-The workflow checks out only `.github/renovate-global.json`, mints an App
-token for the repo plus `RENOVATE_EXTRA_REPOSITORIES`, installs the pinned
-common-repo CLI, and runs the Renovate action against the current repo.
-The token covers the tag lookups and the clones `common-repo apply` does
-during the post-upgrade task.
+The workflow checks out only `.github/renovate-global.json`, mints two App
+tokens, installs the pinned common-repo CLI, and runs the Renovate action
+against the current repo:
+
+- A write token for the current repo only. Renovate also hands it to the
+  post-upgrade `common-repo apply` as a git insteadOf for github.com.
+- A read-only token for `RENOVATE_EXTRA_REPOSITORIES`, passed as one
+  Renovate host rule per repo URL. Git prefers that longer insteadOf, so
+  tag lookups and apply's clones of private upstreams use it, and nothing
+  in the run can push to them.
 
 The global config sets:
 
@@ -115,7 +121,8 @@ Detected: `url:` and `ref:` keys of the same `repo:` entry, in either order,
 with only blank or comment lines between them. URLs must be
 `https://github.com/<owner>/<repo>`, quoted or not, with or without `.git`.
 Refs can be quoted or bare, with a trailing comment. Refs are looked up as
-GitHub tags.
+git tags (`git-tags` datasource on the GitHub URL), which works with the
+per-repo read-only token for private upstreams.
 
 Not detected or not updated: flow-style maps (`{url: ..., ref: ...}`), other
 keys between `url:` and `ref:`, SSH or non-GitHub URLs, and local paths.
