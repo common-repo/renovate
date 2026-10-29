@@ -54,7 +54,7 @@ file, including this one, has a newer tag.
 | `RENOVATE_EXTRA_REPOSITORIES` | empty | Comma-separated private upstreams under `GH_APP_OWNER`. They get a separate read-only token |
 | `RENOVATE_CRON` | `17 6 * * *` | Schedule for the daily run |
 | `RENOVATE_LOG_LEVEL` | `info` | Renovate `LOG_LEVEL` |
-| `COMMON_REPO_VERSION` | `v0.37.7` | common-repo CLI used by the post-upgrade `apply` |
+| `COMMON_REPO_VERSION` | `v0.38.2` | common-repo CLI used by the post-upgrade `apply` |
 
 Values are secret *names*, never secret values. These are the same three
 App variables [semantic-release](https://github.com/common-repo/semantic-release#template-variables)

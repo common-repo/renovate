@@ -95,7 +95,7 @@ jobs:
         id: cr
         uses: common-repo/setup-common-repo@887d2b31e6678fb650d1b1b6fb6097afa5528310 # v1.0.1
         with:
-          version: v0.37.7
+          version: v0.38.2
 
       # The common-repo binary is mounted into the Renovate container so the
       # postUpgradeTasks in the global config can run `common-repo apply`.
