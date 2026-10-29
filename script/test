@@ -94,7 +94,7 @@ if [ -f "$rendered" ]; then
     pass "no unrendered sentinels"
   fi
   for want in 'secrets.FIXTURE_APP_ID' 'secrets.FIXTURE_APP_KEY' 'owner: fixture-org' \
-    'repositories: ${{ steps.repo.outputs.name }}$' 'EXTRA_REPOSITORIES: "private-a,private-b"' 'cron: "17 6 \* \* \*"' 'version: v0.37.7'; do
+    'repositories: ${{ steps.repo.outputs.name }}$' 'EXTRA_REPOSITORIES: "private-a,private-b"' 'cron: "17 6 \* \* \*"' 'version: v0.38.2'; do
     if grep -q "$want" "$rendered"; then pass "rendered: $want"; else fail "not rendered: $want"; fi
   done
   # The write token must not reach the private upstreams.

@@ -22,7 +22,7 @@
       RENOVATE_EXTRA_REPOSITORIES: ""
       RENOVATE_CRON: "17 6 * * *"
       RENOVATE_LOG_LEVEL: info
-      COMMON_REPO_VERSION: v0.37.7
+      COMMON_REPO_VERSION: v0.38.2
 
 # Source API: what consumers inherit. Source and self pipelines have separate
 # variable scopes. These defaults allow local apply; consumer
@@ -34,7 +34,7 @@
     RENOVATE_EXTRA_REPOSITORIES: ""
     RENOVATE_CRON: "17 6 * * *"
     RENOVATE_LOG_LEVEL: info
-    COMMON_REPO_VERSION: v0.37.7
+    COMMON_REPO_VERSION: v0.38.2
 - include:
     - "src/**"
 - template:
