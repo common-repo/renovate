@@ -78,6 +78,9 @@ jobs:
       # One host rule per private upstream. Renovate turns each into a git
       # insteadOf for that repo URL, which git prefers over the shorter
       # github.com rule, for tag lookups and post-upgrade clones alike.
+      # matchHost and insteadOf both match by prefix, so the token also goes
+      # to a same-owner repo whose name starts with an upstream's. That's
+      # harmless: the token can only read the listed upstreams.
       - name: Route private upstreams to the read-only token
         if: env.EXTRA_REPOSITORIES != ''
         env:
