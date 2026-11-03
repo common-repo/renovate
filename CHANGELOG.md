@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.2.0 - 2026-11-03
+#### Features
+- (**common-repo**) update upstream to v2.3.0 - (e402ad8) - jathanism
+
+- - -
+
 ## v0.1.3 - 2026-11-03
 #### Bug Fixes
 - (**deps**) update checkout and App token actions - (01222c6) - Jathan McCollum
