@@ -2,6 +2,14 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.1.3 - 2026-11-03
+#### Bug Fixes
+- (**deps**) update checkout and App token actions - (01222c6) - Jathan McCollum
+#### Documentation
+- explain why host-rule prefix matching is safe - (acf367c) - Jathan McCollum
+
+- - -
+
 ## v0.1.2 - 2026-10-29
 #### Bug Fixes
 - pin the common-repo CLI to v0.38.2 - (9dac0aa) - Jathan McCollum
