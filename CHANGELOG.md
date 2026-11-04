@@ -2,6 +2,12 @@
 All notable changes to this project will be documented in this file. See [conventional commits](https://www.conventionalcommits.org/) for commit guidelines.
 
 - - -
+## v0.2.2 - 2026-11-04
+#### Bug Fixes
+- (**deps**) default the common-repo CLI to v0.38.4 - (c144820) - Devin AI, *Devin AI*
+
+- - -
+
 ## v0.2.1 - 2026-11-04
 #### Bug Fixes
 - (**deps**) default the common-repo CLI to v0.38.3 - (9c42c74) - Devin AI, *Devin AI*
